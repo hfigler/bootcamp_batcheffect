@@ -1,0 +1,51 @@
+# R markdown report 1
+
+```{r, message = FALSE}
+library(Biobase)
+library(rafalib)
+library(genefilter)
+library(GSE5859)
+data(GSE5859)
+
+```
+
+```{r}
+
+# gene expression levels  
+geneExpression = exprs(e)
+
+# print date info
+sampleInfo = pData(e)
+head(sampleInfo$date)
+```
+
+```{r, echo = FALSE}
+# Output: print a table of year vs ethnic groups
+year = factor( format(sampleInfo$date,"%y") )
+tab = table(year,sampleInfo$ethnicity)
+print(tab)
+```
+
+# Differential expression analysis
+
+``` {r}
+##remove control genes
+out <- grep("AFFX",rownames(geneExpression))
+
+# Use a t-test to perform differential expression analysis 
+# between CEU and ASN
+eth <- sampleInfo$ethnicity
+ind<- which(eth%in%c("CEU","ASN"))
+res1 <- rowttests(geneExpression[-out,ind],droplevels(eth[ind]))
+
+# Use a t-test to perform differential expression analysis 
+# between 2002 vs 2003 within CEU
+ind <- which(year%in%c("02","03") & eth=="CEU")
+res2 <- rowttests(geneExpression[-out,ind],droplevels(year[ind]))
+```
+
+```{r, echo=FALSE}
+# output: plot histograms for p-values 
+hist(res1$p, main="p-value of CEU vs ASN")
+hist(res2$p, main="p-value of 2002 vs 2003 for CEU")
+```
